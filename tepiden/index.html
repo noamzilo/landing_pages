@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>tepiden — Ellos preguntan. Vos respondés.</title>
-<meta name="description" content="Todos los días alguien en tu zona pide tu servicio. Nosotros escuchamos, vos llegás primero.">
+<meta name="description" content="Todos los días alguien en tu barrio pide tu servicio en un grupo de WhatsApp.">
 <style>
 :root{
   --bg:#f4f5f7; --panel:#fff; --line:#e4e6ea; --ink:#101418; --muted:#6b7480;
@@ -20,7 +20,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);
   font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased}
-.wrap{max-width:600px;margin:0 auto;padding:0 16px 72px}
+.wrap{max-width:600px;margin:0 auto;padding:0 16px 64px}
 header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 8px}
 .logo{font-weight:700;font-size:19px;letter-spacing:-.02em}
 .logo span{color:var(--accent)}
@@ -44,32 +44,30 @@ h1 em{font-style:normal;color:var(--accent)}
 .qrow input:focus{outline:0;border-color:var(--accent)}
 .qrow button{flex:none;border:0;border-radius:11px;background:var(--accent);
   color:var(--accent-ink);font:600 15px/1 inherit;padding:0 18px;cursor:pointer}
-.caret{display:inline-block;width:2px;height:1.05em;background:var(--accent);
-  vertical-align:-3px;animation:blink .9s step-end infinite}
-@keyframes blink{50%{opacity:0}}
 
 .reframe{margin:18px 0 10px;font-size:13.5px;color:var(--muted)}
 
-.track{display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;
-  scrollbar-width:none;margin:0 -16px;padding:0 16px}
-.track::-webkit-scrollbar{display:none}
-.slide{flex:0 0 100%;scroll-snap-align:center}
-.lead{background:var(--bubble);border-radius:4px 14px 14px 14px;padding:14px;
-  font-size:15.5px;min-height:74px;display:flex;align-items:center}
-.skel{height:15px;border-radius:7px;background:var(--line);margin:5px 0;
+/* ---- the lead cards: stacked, never a carousel ---- */
+.feed{display:flex;flex-direction:column;gap:10px}
+.bubble{background:var(--bubble);border-radius:4px 14px 14px 14px;padding:13px 14px}
+.msg{font-size:15.5px}
+.meta{margin-top:11px;padding-top:10px;border-top:1px solid var(--line);
+  display:grid;grid-template-columns:auto 1fr;gap:3px 12px;font-size:12.5px}
+.meta dt{color:var(--muted)}
+.meta dd{margin:0;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+/* dots = we have this, it comes with the lead */
+.held{color:var(--ink);font-weight:600}
+/* dash = absent because this is an example. never a dot-mask over nothing */
+.absent{color:var(--muted);font-weight:400;letter-spacing:0}
+.skel{height:14px;border-radius:7px;background:var(--line);margin:5px 0;
   animation:sheen 1.1s ease-in-out infinite}
 .skel.s2{width:78%}.skel.s3{width:55%}
 @keyframes sheen{50%{opacity:.45}}
-.dots{display:flex;gap:6px;justify-content:center;margin:12px 0 14px}
-.dot{width:6px;height:6px;border-radius:50%;background:var(--line);border:0;padding:0;cursor:pointer}
-.dot[aria-current=true]{background:var(--accent)}
+.honest{margin:12px 0 16px;font-size:12.5px;color:var(--muted)}
 
 .btn{display:block;width:100%;border:0;border-radius:11px;cursor:pointer;
   background:var(--accent);color:var(--accent-ink);font:600 15px/1 inherit;padding:15px}
 .btn:active{transform:translateY(1px)}
-.alt{display:block;text-align:center;margin-top:12px;font-size:13.5px;
-  color:var(--muted);text-decoration:none}
-.alt:hover{color:var(--accent)}
 
 /* ---- pay panel ---- */
 .pay{display:none;margin-top:14px;border-top:1px dashed var(--line);padding-top:16px}
@@ -87,23 +85,34 @@ h1 em{font-style:normal;color:var(--accent)}
 .done b{display:block;font-size:17px;margin-bottom:6px}
 .done span{color:var(--muted);font-size:14.5px}
 
-/* ---- speed section ---- */
-section{margin-top:56px}
+/* ---- sections ---- */
+section{margin-top:48px}
 h2{font-size:20px;letter-spacing:-.02em;margin:0 0 6px}
-.lede{color:var(--muted);font-size:15px;margin:0 0 20px}
+.lede{color:var(--muted);font-size:15px;margin:0 0 18px}
+.steps{margin:0;padding:0;list-style:none;counter-reset:s}
+.steps li{position:relative;padding-left:30px;margin-bottom:11px;font-size:15px}
+.steps li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:1px;
+  width:21px;height:21px;border-radius:50%;background:var(--bubble);color:var(--accent);
+  font:700 12px/21px inherit;text-align:center}
+details{margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+summary{cursor:pointer;font-size:14.5px;font-weight:600;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"+ ";color:var(--accent);font-weight:700}
+details[open] summary::before{content:"− "}
+details p{font-size:14px;color:var(--muted);margin:11px 0 0}
+
 .bars{display:grid;gap:11px}
 .brow{display:grid;grid-template-columns:78px 1fr auto;gap:10px;align-items:center;font-size:13px}
 .brow .t{color:var(--muted)}
-.bfill{height:11px;border-radius:6px;background:var(--bar);min-width:3px}
+.bfill{display:block;height:11px;border-radius:6px;background:var(--bar);min-width:3px}
 .brow .v{font-weight:700;font-variant-numeric:tabular-nums}
 .src{font-size:11.5px;color:var(--muted);margin-top:12px}
-.src a{color:inherit}
-blockquote{margin:26px 0 0;padding:15px 16px;background:var(--panel);border:1px solid var(--line);
-  border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;
-  font-size:15.5px}
-blockquote cite{display:block;margin-top:9px;font-style:normal;font-size:12.5px;color:var(--muted)}
-blockquote cite a{color:var(--accent)}
-footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:44px}
+
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);
+  display:flex;gap:13px;align-items:flex-start}
+footer img{width:46px;height:46px;border-radius:50%;flex:none;object-fit:cover}
+footer p{margin:0;font-size:13.5px;color:var(--muted)}
+footer b{color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
@@ -123,16 +132,16 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:44px}
 <div class="widget">
   <label class="qlabel" for="q" data-t="qlabel"></label>
   <div class="qrow">
-    <input id="q" maxlength="120" autocomplete="off" spellcheck="false">
+    <input id="q" list="rubros" maxlength="120" autocomplete="off" spellcheck="false">
+    <datalist id="rubros"></datalist>
     <button id="go" data-t="go"></button>
   </div>
 
   <p class="reframe" data-t="reframe"></p>
-  <div class="track" id="track"></div>
-  <div class="dots" id="dots"></div>
+  <div class="feed" id="feed"></div>
+  <p class="honest" data-t="honest"></p>
 
   <button class="btn" id="cta" data-t="cta"></button>
-  <a class="alt" id="alt" href="#" data-t="alt"></a>
 
   <div class="pay" id="pay">
     <div class="price" id="price"></div>
@@ -145,6 +154,20 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:44px}
 </div>
 
 <section>
+  <h2 data-t="mech"></h2>
+  <ol class="steps">
+    <li data-t="m1"></li>
+    <li data-t="m2"></li>
+    <li data-t="m3"></li>
+  </ol>
+  <details>
+    <summary data-t="failh"></summary>
+    <p data-t="fail1"></p>
+    <p data-t="fail2"></p>
+  </details>
+</section>
+
+<section>
   <h2 data-t="spdh"></h2>
   <p class="lede" data-t="spdl"></p>
   <div class="bars">
@@ -153,26 +176,42 @@ footer{text-align:center;color:var(--muted);font-size:12.5px;margin-top:44px}
     <div class="brow"><span class="t" data-t="b3"></span><span><i class="bfill" style="width:2%"></i></span><span class="v">1×</span></div>
   </div>
   <p class="src" data-t="src"></p>
-
-  <blockquote>
-    <span data-t="hq"></span>
-    <cite>Alex Hormozi — <a href="https://www.youtube.com/watch?v=R1G1ntNY32Y&amp;t=0s" target="_blank" rel="noopener">You Need to Call Your Leads Faster</a></cite>
-  </blockquote>
 </section>
 
-<footer>tepiden · Asunción, Paraguay</footer>
+<footer>
+  <img src="noam.jpg" alt="" width="46" height="46">
+  <p data-t="who"></p>
+</footer>
 </div>
 
 <script>
 /* ═══ constants — LAMBDA_URL and POSTHOG_KEY are public, not secrets ═══════ */
-const LAMBDA_URL  = "https://jznndqelmqs3b2tu4nh764finq0ewomv.lambda-url.us-east-1.on.aws/";                       // set by make tepiden-create
-const POSTHOG_KEY = "phc_yMzPdXzMAS73NqDvXYFp4KicxviVECwXDD36jsPW4qLr";                       // phc_… project key
+const LAMBDA_URL  = "https://jznndqelmqs3b2tu4nh764finq0ewomv.lambda-url.us-east-1.on.aws/";
+const POSTHOG_KEY = "phc_yMzPdXzMAS73NqDvXYFp4KicxviVECwXDD36jsPW4qLr";
 const POSTHOG_HOST= "https://us.i.posthog.com";
 const W = atob('OTcyNTQ3MjA0NTgx');           // never in the DOM; assembled on click
 const PRICE_GS = 30000, PRICE_LABEL = "Gs. 30.000";
-const EXAMPLE = { es:"dentista en Villa Morra", en:"dentist in Villa Morra" };
+const PHONE_MASK = "+595 9•• ••• •••";
 
-/* canned leads — shown on first load, and whenever the Lambda is slow or down.
+/* Rotating placeholders. Self-identification: the visitor waits to see their own
+   trade inside the box that asks for it. Under 5s total, so WCAG 2.2.2 needs no
+   pause control. Never writes .value — that would poison the `searched` data. */
+const PLACEHOLDERS = {
+  es:["plomero en Lambaré","dentista en Villa Morra","electricista en San Lorenzo",
+      "peluquería en Luque","gomería en Fernando de la Mora","cerrajero en Asunción",
+      "aire acondicionado en Capiatá","albañil en Ñemby","veterinaria en Encarnación"],
+  en:["plumber in Lambaré","dentist in Villa Morra","electrician in San Lorenzo",
+      "hair salon in Luque","tyre shop in Fernando de la Mora","locksmith in Asunción",
+      "air conditioning in Capiatá","builder in Ñemby","vet in Encarnación"],
+};
+const TRADES = {
+  es:["plomero","electricista","dentista","peluquería","gomería","cerrajero","albañil",
+      "aire acondicionado","veterinaria","pintor","carpintero","fletes","niñera","jardinero"],
+  en:["plumber","electrician","dentist","hair salon","tyre shop","locksmith","builder",
+      "air conditioning","vet","painter","carpenter","removals","babysitter","gardener"],
+};
+
+/* canned leads — first load, and whenever the Lambda is slow or down.
    Same strings the Lambda falls back to. */
 const CANNED = {
   es:["Alguien conoce un dentista por Villa Morra? Me duele una muela.",
@@ -185,33 +224,51 @@ const CANNED = {
 
 const T = {
 es:{h1:'Ellos preguntan. <em>Vos respondés.</em>',
-    sub:'Todos los días alguien en tu zona pide tu servicio en un grupo de WhatsApp. Nosotros escuchamos. Vos llegás primero.',
-    qlabel:'¿A qué te dedicás y dónde?', qph:'plomero en Lambaré', go:'Ver',
+    sub:'Todos los días alguien en tu barrio pide tu servicio en un grupo de WhatsApp.',
+    qlabel:'¿A qué te dedicás y dónde?', go:'Ver',
     reframe:'Mirá qué tipo de pedidos encontramos para tu rubro:',
-    cta:'Quiero clientes así →', alt:'o escribinos por WhatsApp',
+    lphone:'Teléfono', lgroup:'Grupo', lex:'— sólo en el ejemplo',
+    honest:'Estos tres los armó una máquina para mostrarte el formato: no son pedidos reales. El de verdad te llega con el número del vecino y el grupo donde lo escribió.',
+    cta:'Quiero clientes así →',
     pricesub:'por cliente · no se cobra nada ahora',
     pnameph:'Tu nombre', pphoneph:'Tu WhatsApp', psend:'Anotarme',
-    pnote:'No pedimos tarjeta. Solo te avisamos cuando haya un cliente real.',
+    pnote:'No pedimos tarjeta.',
     doneh:'Listo, ya estás anotado.', donep:'Te avisamos apenas tengamos un cliente real para vos.',
+    mech:'Cómo lo encontramos',
+    m1:'Estamos dentro de grupos de barrio de Asunción y alrededores.',
+    m2:'Una máquina lee cada mensaje y marca los que piden un servicio.',
+    m3:'Te llega el mensaje y el WhatsApp de quien lo escribió.',
+    failh:'¿Y cuándo falla?',
+    fail1:'A veces marcamos algo que parecía un pedido y no lo era. «Alguien sabe si el dentista de la esquina sigue abierto?» es curiosidad, no un trabajo.',
+    fail2:'Y a veces el grupo oculta el número de quien escribió, así que no hay a quién contactar. Esos no te los cobramos.',
     spdh:'El que contesta primero se lleva el cliente.',
     spdl:'Harvard Business Review midió 2.241 empresas. Probabilidad de calificar un cliente, según cuánto tardás en contestar:',
     b1:'menos de 1 h', b2:'1 a 2 h', b3:'más de 24 h',
     src:'Oldroyd, McElheran y Elkington, «The Short Life of Online Sales Leads», Harvard Business Review, 2011. Promedio de respuesta medido: 42 horas. El 23% nunca contestó.',
-    hq:'«Hay muchísima investigación que sugiere que podés multiplicar por cuatro o cinco tu conversión llamando a tus clientes dentro de los primeros 60 segundos.»'},
+    who:'Soy <b>Noam</b>, de Yaksano. Estoy armando tepiden para Asunción. Si algo de esto no te cierra, escribime y lo hablamos.'},
 en:{h1:'They ask. <em>You answer.</em>',
-    sub:'Every day someone in your area asks for your service in a WhatsApp group. We listen. You get there first.',
-    qlabel:'What do you do, and where?', qph:'plumber in Lambaré', go:'Go',
+    sub:'Every day someone in your neighbourhood asks for your service in a WhatsApp group.',
+    qlabel:'What do you do, and where?', go:'Go',
     reframe:'Here is the kind of request we find for your trade:',
-    cta:'I want customers like these →', alt:'or message us on WhatsApp',
+    lphone:'Phone', lgroup:'Group', lex:'— example only',
+    honest:'A machine assembled these three to show you the format: they are not real requests. The real one arrives with the neighbour’s number and the group they posted in.',
+    cta:'I want customers like these →',
     pricesub:'per customer · nothing is charged now',
     pnameph:'Your name', pphoneph:'Your WhatsApp', psend:'Sign me up',
-    pnote:'No card required. We just tell you when a real customer shows up.',
+    pnote:'No card required.',
     doneh:'Done, you are on the list.', donep:'We will message you as soon as we have a real customer for you.',
+    mech:'How we find them',
+    m1:'We sit inside neighbourhood groups in Asunción and around it.',
+    m2:'A machine reads every message and marks the ones asking for a service.',
+    m3:'You get the message and the WhatsApp of whoever wrote it.',
+    failh:'And when does it fail?',
+    fail1:'Sometimes we mark something that looked like a request and was not. "Does anyone know if the dentist on the corner is still open?" is curiosity, not a job.',
+    fail2:'And sometimes the group hides the sender’s number, so there is nobody to contact. We do not charge you for those.',
     spdh:'Whoever answers first gets the customer.',
     spdl:'Harvard Business Review measured 2,241 companies. Odds of qualifying a lead, by how long you take to answer:',
     b1:'under 1 h', b2:'1 to 2 h', b3:'over 24 h',
     src:'Oldroyd, McElheran and Elkington, "The Short Life of Online Sales Leads", Harvard Business Review, 2011. Measured average response: 42 hours. 23% never replied.',
-    hq:'"There is tons of research that suggests you can four or five x your conversion of leads by calling them within 60 seconds."'},
+    who:'I am <b>Noam</b>, from Yaksano. I am building tepiden for Asunción. If any of this does not add up, message me and we will talk it through.'},
 };
 
 /* ═══ analytics ═══════════════════════════════════════════════════════════ */
@@ -221,7 +278,7 @@ en:{h1:'They ask. <em>You answer.</em>',
 const track = (e,p) => { try{ if(window.posthog&&POSTHOG_KEY) posthog.capture(e,p); }catch(_){} };
 
 /* ═══ state ═══════════════════════════════════════════════════════════════ */
-let lang = 'es', live = false, leads = CANNED.es.slice(), idx = 0;
+let lang = 'es', leads = CANNED.es.slice();
 let variant = 'pay', source = 'canned', business = '';
 const $ = id => document.getElementById(id);
 const vid = (()=>{ try{ let v=localStorage.getItem('tp_v');
@@ -233,41 +290,37 @@ const ctaText = () => (lang==='es'
   ? 'Hola! Quiero clientes así' + (business? ' — '+business : '') + ' · v'+vid
   : 'Hi! I want customers like these' + (business? ' — '+business : '') + ' · v'+vid);
 
-/* ═══ carousel ════════════════════════════════════════════════════════════ */
+/* ═══ the lead cards ══════════════════════════════════════════════════════
+   One hidden field (the phone), everything else at full fidelity. Two masks,
+   never interchangeable: dots = we have it and it ships with the lead;
+   dash = this example has nothing here, because it is an example. */
+function row(dl, label, value, cls){
+  const dt = document.createElement('dt'); dt.textContent = label;
+  const dd = document.createElement('dd'); dd.textContent = value; dd.className = cls;
+  dl.append(dt, dd);
+}
 function renderLeads(skeleton){
-  const track_ = $('track'), dots = $('dots');
-  track_.replaceChildren(); dots.replaceChildren();
-  const n = skeleton ? 3 : leads.length;
-  for(let i=0;i<n;i++){
-    const s = document.createElement('div'); s.className='slide';
-    const c = document.createElement('div'); c.className='lead';
+  const t = T[lang], feed = $('feed');
+  feed.replaceChildren();
+  for(let i=0; i<3; i++){
+    const b = document.createElement('div'); b.className='bubble';
+    const m = document.createElement('div'); m.className='msg';
     if(skeleton){
-      c.replaceChildren(...['','s2','s3'].map(k=>{
-        const b=document.createElement('div'); b.className='skel '+k; return b;}));
-      c.style.display='block';
+      m.replaceChildren(...['','s2','s3'].map(k=>{
+        const s=document.createElement('div'); s.className='skel '+k; return s;}));
     } else {
-      c.textContent = leads[i];            // never innerHTML: LLM + visitor text
+      m.textContent = leads[i] || '';       // never innerHTML: LLM + visitor text
     }
-    s.appendChild(c); track_.appendChild(s);
-
-    const d = document.createElement('button');
-    d.className='dot'; d.setAttribute('aria-label','Lead '+(i+1));
-    d.setAttribute('aria-current', String(i===idx));
-    d.onclick = () => { hand(); go(i); };
-    dots.appendChild(d);
+    b.appendChild(m);
+    if(!skeleton){
+      const dl = document.createElement('dl'); dl.className='meta';
+      row(dl, t.lphone, PHONE_MASK, 'held');
+      row(dl, t.lgroup, t.lex,      'absent');
+      b.appendChild(dl);
+    }
+    feed.appendChild(b);
   }
 }
-function go(i){
-  idx=i;
-  const t=$('track'); t.scrollTo({left:i*t.clientWidth, behavior:'smooth'});
-  [...$('dots').children].forEach((d,j)=>d.setAttribute('aria-current',String(j===i)));
-  track('lead_swiped',{index:i});
-}
-$('track').addEventListener('scroll', ()=>{
-  const t=$('track'), i=Math.round(t.scrollLeft/t.clientWidth);
-  if(i!==idx && i>=0 && i<leads.length){ idx=i;
-    [...$('dots').children].forEach((d,j)=>d.setAttribute('aria-current',String(j===i))); }
-}, {passive:true});
 
 /* ═══ lead fetch — always resolves, always three leads ════════════════════ */
 async function fetchLeads(){
@@ -292,7 +345,7 @@ async function fetchLeads(){
   }
   leads = (Array.isArray(data.leads)&&data.leads.length ? data.leads : CANNED[lang]).slice(0,3);
   source = data.source || 'unknown';
-  idx = 0; renderLeads(false);
+  renderLeads(false);
   track('leads_shown',{n:leads.length, source, latency_ms:Math.round(performance.now()-t0)});
 }
 
@@ -301,35 +354,49 @@ function render(){
   const t = T[lang];
   document.documentElement.lang = lang;
   document.querySelectorAll('[data-t]').forEach(n=>n.innerHTML = t[n.dataset.t]);
-  $('q').placeholder = t.qph;
   $('pname').placeholder = t.pnameph;
   $('pphone').placeholder = t.pphoneph;
   $('price').replaceChildren(document.createTextNode(PRICE_LABEL),
     Object.assign(document.createElement('small'),{textContent:t.pricesub}));
+  $('rubros').replaceChildren(...TRADES[lang].map(v=>
+    Object.assign(document.createElement('option'),{value:v})));
   $('es').setAttribute('aria-pressed', lang==='es');
   $('en').setAttribute('aria-pressed', lang==='en');
-  $('alt').style.display = variant==='pay' ? 'block' : 'none';
   renderLeads(false);
 }
 
-/* ═══ handover ════════════════════════════════════════════════════════════ */
-function hand(){ live = true; }
-['pointerdown','keydown','wheel','touchstart'].forEach(e=>
-  addEventListener(e, hand, {once:true, passive:true}));
+/* ═══ placeholder rotation ════════════════════════════════════════════════ */
+let rotTimer = null, rotStopped = false;
+function stopRotation(){ rotStopped = true; clearTimeout(rotTimer); }
+function startRotation(){
+  const box = $('q');
+  const pool = PLACEHOLDERS[lang].slice().sort(()=>Math.random()-0.5).slice(0,3);
+  box.placeholder = pool[0];
+  const reduce = window.matchMedia
+    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return;                        // first string only, no motion
+  const step = i => () => {
+    if(rotStopped) return;
+    box.placeholder = pool[i];
+    if(i < pool.length-1) rotTimer = setTimeout(step(i+1), 1700);
+  };
+  rotTimer = setTimeout(step(1), 1700);     // 0s / 1.7s / 3.4s, done well under 5s
+}
+['focus','pointerdown','keydown'].forEach(e=>
+  addEventListener(e, stopRotation, {once:true, passive:true, capture:true}));
 
 /* ═══ wiring ══════════════════════════════════════════════════════════════ */
-$('es').onclick = ()=>{ hand(); lang='es'; leads=CANNED.es.slice(); render(); };
-$('en').onclick = ()=>{ hand(); lang='en'; leads=CANNED.en.slice(); render(); };
-$('go').onclick = ()=>{ hand(); fetchLeads(); };
-$('q').addEventListener('keydown', e=>{ if(e.key==='Enter'){ hand(); fetchLeads(); } });
+$('es').onclick = ()=>{ lang='es'; leads=CANNED.es.slice(); render(); };
+$('en').onclick = ()=>{ lang='en'; leads=CANNED.en.slice(); render(); };
+$('go').onclick = ()=>{ stopRotation(); fetchLeads(); };
+$('q').addEventListener('keydown', e=>{ if(e.key==='Enter') fetchLeads(); });
 
 $('cta').onclick = ()=>{
-  track('buy_click',{variant, price_shown:PRICE_GS, business_text:business, lead_index:idx});
+  track('buy_click',{variant, price_shown:PRICE_GS, business_text:business});
   if(variant==='whatsapp'){ track('wa_opened',{}); wa(ctaText()); }
   else { $('pay').classList.add('on'); $('cta').style.display='none';
          track('pay_viewed',{}); $('pname').focus(); }
 };
-$('alt').onclick = e=>{ e.preventDefault(); track('wa_opened',{from:'alt'}); wa(ctaText()); };
 $('psend').onclick = ()=>{
   const name=$('pname').value.trim(), phone=$('pphone').value.trim();
   if(!phone){ $('pphone').focus(); return; }
@@ -344,6 +411,7 @@ $('psend').onclick = ()=>{
   const forced = p.get('variant');
   variant = (forced==='whatsapp'||forced==='pay') ? forced : 'pay';
   render();
+  startRotation();
 
   const land = {variant, vid};
   ['utm_source','utm_medium','utm_campaign','utm_content'].forEach(k=>{
@@ -355,24 +423,12 @@ $('psend').onclick = ()=>{
   if(POSTHOG_KEY && !forced){ try{ posthog.onFeatureFlags(()=>{
     const v = posthog.getFeatureFlag('cta-variant');
     if((v==='whatsapp'||v==='pay') && v!==variant){
-      variant=v; posthog.register({variant:v});
-      $('alt').style.display = v==='pay'?'block':'none'; }
+      variant=v; posthog.register({variant:v}); }
   }); }catch(_){} }
 
   new IntersectionObserver((es,o)=>{ es.forEach(e=>{ if(e.isIntersecting){
     track('widget_viewed',{}); o.disconnect(); }}); })
     .observe(document.querySelector('.widget'));
-
-  // autoplay: type the example, then show the canned leads. Any touch cancels it.
-  const box = $('q'), txt = EXAMPLE[lang];
-  setTimeout(function tick(i){
-    return function(){
-      if(live){ if(!box.value) box.value = txt; return; }
-      box.value = txt.slice(0, i);
-      if(i < txt.length) setTimeout(tick(i+1), 55);
-      else { business = txt; }
-    };
-  }(1), 900);
 })();
 </script>
 </body>
