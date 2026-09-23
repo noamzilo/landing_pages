@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>tepiden — Ellos preguntan. Vos respondés.</title>
-<meta name="description" content="Todos los días alguien en tu barrio pide tu servicio en un grupo de WhatsApp.">
+<title>tepiden — Ellos preguntan. Tú respondes.</title>
+<meta name="description" content="Todos los días alguien en tu zona pide tu servicio en un grupo de WhatsApp.">
 <style>
 :root{
   --bg:#f4f5f7; --panel:#fff; --line:#e4e6ea; --ink:#101418; --muted:#6b7480;
@@ -190,75 +190,79 @@ const LAMBDA_URL  = "https://jznndqelmqs3b2tu4nh764finq0ewomv.lambda-url.us-east
 const POSTHOG_KEY = "phc_yMzPdXzMAS73NqDvXYFp4KicxviVECwXDD36jsPW4qLr";
 const POSTHOG_HOST= "https://us.i.posthog.com";
 const W = atob('OTcyNTQ3MjA0NTgx');           // never in the DOM; assembled on click
-const PRICE_GS = 30000, PRICE_LABEL = "Gs. 30.000";
-const PHONE_MASK = "+595 9•• ••• •••";
+const PRICE_USD = 5, PRICE_LABEL = "US$ 5";
+/* Digit count is not universal across countries, so the mask shows shape without
+   claiming a specific national format. */
+const PHONE_MASK = "+•• ••• ••• •••";
 
 /* Rotating placeholders. Self-identification: the visitor waits to see their own
    trade inside the box that asks for it. Under 5s total, so WCAG 2.2.2 needs no
-   pause control. Never writes .value — that would poison the `searched` data. */
+   pause control. Never writes .value — that would poison the `searched` data.
+   Cities span LatAm so breadth is visible and most visitors recognise one. */
 const PLACEHOLDERS = {
-  es:["plomero en Lambaré","dentista en Villa Morra","electricista en San Lorenzo",
-      "peluquería en Luque","gomería en Fernando de la Mora","cerrajero en Asunción",
-      "aire acondicionado en Capiatá","albañil en Ñemby","veterinaria en Encarnación"],
-  en:["plumber in Lambaré","dentist in Villa Morra","electrician in San Lorenzo",
-      "hair salon in Luque","tyre shop in Fernando de la Mora","locksmith in Asunción",
-      "air conditioning in Capiatá","builder in Ñemby","vet in Encarnación"],
+  es:["plomero en Polanco","dentista en Chapinero","electricista en Miraflores",
+      "peluquería en Palermo","cerrajero en Laureles","albañil en Ñuñoa",
+      "aire acondicionado en Escazú","veterinaria en Pocitos","pintor en Villa Morra"],
+  en:["plumber in Polanco","dentist in Chapinero","electrician in Miraflores",
+      "hair salon in Palermo","locksmith in Laureles","builder in Ñuñoa",
+      "air conditioning in Escazú","vet in Pocitos","painter in Villa Morra"],
 };
 const TRADES = {
-  es:["plomero","electricista","dentista","peluquería","gomería","cerrajero","albañil",
-      "aire acondicionado","veterinaria","pintor","carpintero","fletes","niñera","jardinero"],
-  en:["plumber","electrician","dentist","hair salon","tyre shop","locksmith","builder",
-      "air conditioning","vet","painter","carpenter","removals","babysitter","gardener"],
+  es:["plomero","electricista","dentista","peluquería","cerrajero","albañil","pintor",
+      "carpintero","aire acondicionado","veterinaria","mecánico","jardinero","mudanzas","niñera"],
+  en:["plumber","electrician","dentist","hair salon","locksmith","builder","painter",
+      "carpenter","air conditioning","vet","mechanic","gardener","removals","babysitter"],
 };
 
 /* canned leads — first load, and whenever the Lambda is slow or down.
-   Same strings the Lambda falls back to. */
+   Same strings the Lambda falls back to. No city: these show before the visitor
+   has told us where they are. */
 const CANNED = {
-  es:["Alguien conoce un dentista por Villa Morra? Me duele una muela.",
-      "Busco odontólogo para limpieza por la zona, alguna recomendación?",
-      "Hay algún dentista que atienda hoy o mañana temprano?"],
-  en:["Anyone know a dentist around Villa Morra? My tooth hurts.",
+  es:["¿Alguien conoce un dentista por la zona? Me duele una muela.",
+      "Busco dentista para limpieza cerca, ¿alguna recomendación?",
+      "¿Hay algún dentista que atienda hoy o mañana temprano?"],
+  en:["Anyone know a dentist nearby? My tooth hurts.",
       "Looking for a dentist for a cleaning nearby, any recommendations?",
       "Is there a dentist available today or early tomorrow?"],
 };
 
 const T = {
-es:{h1:'Ellos preguntan. <em>Vos respondés.</em>',
-    sub:'Todos los días alguien en tu barrio pide tu servicio en un grupo de WhatsApp.',
-    qlabel:'¿A qué te dedicás y dónde?', go:'Ver',
-    reframe:'Mirá qué tipo de pedidos encontramos para tu rubro:',
+es:{h1:'Ellos preguntan. <em>Tú respondes.</em>',
+    sub:'Todos los días alguien en tu zona pide tu servicio en un grupo de WhatsApp.',
+    qlabel:'¿A qué te dedicas y dónde?', go:'Ver',
+    reframe:'Mira qué tipo de pedidos encontramos para tu negocio:',
     lphone:'Teléfono', lgroup:'Grupo', lex:'— sólo en el ejemplo',
-    honest:'Estos tres los armó una máquina para mostrarte el formato: no son pedidos reales. El de verdad te llega con el número del vecino y el grupo donde lo escribió.',
+    honest:'Estos tres los armó una máquina para mostrarte el formato: no son pedidos reales. El de verdad te llega con el número de quien lo pidió y el grupo donde lo escribió.',
     cta:'Quiero clientes así →',
     pricesub:'por cliente · no se cobra nada ahora',
     pnameph:'Tu nombre', pphoneph:'Tu WhatsApp', psend:'Anotarme',
     pnote:'No pedimos tarjeta.',
-    doneh:'Listo, ya estás anotado.', donep:'Te avisamos apenas tengamos un cliente real para vos.',
-    mech:'Cómo lo encontramos',
-    m1:'Estamos dentro de grupos de barrio de Asunción y alrededores.',
+    doneh:'Listo, ya estás anotado.', donep:'Te avisamos apenas tengamos un cliente real para ti.',
+    mech:'Cómo los encontramos',
+    m1:'Estamos dentro de grupos de vecinos y de compra-venta de tu ciudad.',
     m2:'Una máquina lee cada mensaje y marca los que piden un servicio.',
     m3:'Te llega el mensaje y el WhatsApp de quien lo escribió.',
     failh:'¿Y cuándo falla?',
-    fail1:'A veces marcamos algo que parecía un pedido y no lo era. «Alguien sabe si el dentista de la esquina sigue abierto?» es curiosidad, no un trabajo.',
+    fail1:'A veces marcamos algo que parecía un pedido y no lo era. «¿Alguien sabe si el dentista de la esquina sigue abierto?» es curiosidad, no un trabajo.',
     fail2:'Y a veces el grupo oculta el número de quien escribió, así que no hay a quién contactar. Esos no te los cobramos.',
     spdh:'El que contesta primero se lleva el cliente.',
-    spdl:'Harvard Business Review midió 2.241 empresas. Probabilidad de calificar un cliente, según cuánto tardás en contestar:',
+    spdl:'Harvard Business Review midió 2.241 empresas. Probabilidad de calificar un cliente, según cuánto tardas en contestar:',
     b1:'menos de 1 h', b2:'1 a 2 h', b3:'más de 24 h',
     src:'Oldroyd, McElheran y Elkington, «The Short Life of Online Sales Leads», Harvard Business Review, 2011. Promedio de respuesta medido: 42 horas. El 23% nunca contestó.',
-    who:'Soy <b>Noam</b>, de Yaksano. Estoy armando tepiden para Asunción. Si algo de esto no te cierra, escribime y lo hablamos.'},
+    who:'Soy <b>Noam</b>, de Yaksano. Estoy construyendo tepiden para América Latina. Si algo de esto no te cierra, escríbeme y lo hablamos.'},
 en:{h1:'They ask. <em>You answer.</em>',
     sub:'Every day someone in your neighbourhood asks for your service in a WhatsApp group.',
     qlabel:'What do you do, and where?', go:'Go',
     reframe:'Here is the kind of request we find for your trade:',
     lphone:'Phone', lgroup:'Group', lex:'— example only',
-    honest:'A machine assembled these three to show you the format: they are not real requests. The real one arrives with the neighbour’s number and the group they posted in.',
+    honest:'A machine assembled these three to show you the format: they are not real requests. The real one arrives with the number of whoever asked and the group they posted in.',
     cta:'I want customers like these →',
     pricesub:'per customer · nothing is charged now',
     pnameph:'Your name', pphoneph:'Your WhatsApp', psend:'Sign me up',
     pnote:'No card required.',
     doneh:'Done, you are on the list.', donep:'We will message you as soon as we have a real customer for you.',
     mech:'How we find them',
-    m1:'We sit inside neighbourhood groups in Asunción and around it.',
+    m1:'We sit inside neighbourhood and buy-and-sell groups in your city.',
     m2:'A machine reads every message and marks the ones asking for a service.',
     m3:'You get the message and the WhatsApp of whoever wrote it.',
     failh:'And when does it fail?',
@@ -268,7 +272,7 @@ en:{h1:'They ask. <em>You answer.</em>',
     spdl:'Harvard Business Review measured 2,241 companies. Odds of qualifying a lead, by how long you take to answer:',
     b1:'under 1 h', b2:'1 to 2 h', b3:'over 24 h',
     src:'Oldroyd, McElheran and Elkington, "The Short Life of Online Sales Leads", Harvard Business Review, 2011. Measured average response: 42 hours. 23% never replied.',
-    who:'I am <b>Noam</b>, from Yaksano. I am building tepiden for Asunción. If any of this does not add up, message me and we will talk it through.'},
+    who:'I am <b>Noam</b>, from Yaksano. I am building tepiden for Latin America. If any of this does not add up, message me and we will talk it through.'},
 };
 
 /* ═══ analytics ═══════════════════════════════════════════════════════════ */
@@ -392,7 +396,7 @@ $('go').onclick = ()=>{ stopRotation(); fetchLeads(); };
 $('q').addEventListener('keydown', e=>{ if(e.key==='Enter') fetchLeads(); });
 
 $('cta').onclick = ()=>{
-  track('buy_click',{variant, price_shown:PRICE_GS, business_text:business});
+  track('buy_click',{variant, price_shown:PRICE_USD, currency:'USD', business_text:business});
   if(variant==='whatsapp'){ track('wa_opened',{}); wa(ctaText()); }
   else { $('pay').classList.add('on'); $('cta').style.display='none';
          track('pay_viewed',{}); $('pname').focus(); }
@@ -401,7 +405,7 @@ $('psend').onclick = ()=>{
   const name=$('pname').value.trim(), phone=$('pphone').value.trim();
   if(!phone){ $('pphone').focus(); return; }
   try{ if(window.posthog&&POSTHOG_KEY) posthog.setPersonProperties({name, whatsapp:phone, business}); }catch(_){}
-  track('pay_submitted',{has_phone:true, has_name:!!name, price_shown:PRICE_GS, business_text:business});
+  track('pay_submitted',{has_phone:true, has_name:!!name, price_shown:PRICE_USD, currency:'USD', business_text:business});
   $('pay').classList.remove('on'); $('done').classList.add('on');
 };
 
