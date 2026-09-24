@@ -47,12 +47,17 @@ h1 em{font-style:normal;color:var(--accent)}
 
 .reframe{margin:18px 0 10px;font-size:13.5px;color:var(--muted)}
 
-/* ---- the lead cards: stacked, never a carousel ---- */
-.feed{display:flex;flex-direction:column;gap:10px}
-.bubble{background:var(--bubble);border-radius:4px 14px 14px 14px;padding:13px 14px}
-.msg{font-size:15.5px}
+/* ---- the lead cards: stacked, never a carousel ----
+   A lead can be several consecutive messages from one person: 20% of real
+   messages in the corpus are a follow-up inside 90s. Parts stack tight, and
+   only the first carries the tail, the way WhatsApp renders a burst. */
+.feed{display:flex;flex-direction:column;gap:17px}
+.card{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+.part{background:var(--bubble);border-radius:14px;padding:12px 14px;font-size:15.5px;
+  max-width:100%}
+.card .part:first-child{border-top-left-radius:4px}
 /* the card footer reads as product, not as a disclaimer */
-.cardfoot{margin-top:11px;padding-top:9px;border-top:1px solid var(--line);
+.cardfoot{margin-top:7px;width:100%;
   display:flex;align-items:center;gap:8px;font-size:12.5px}
 .klabel{color:var(--muted)}
 .held{font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:.07em}
@@ -226,16 +231,17 @@ const TRADES = {
       "carpenter","air conditioning","vet","mechanic","gardener","removals","babysitter"],
 };
 
-/* canned leads — first load, and whenever the Lambda is slow or down.
-   Same strings the Lambda falls back to. No city: these show before the visitor
-   has told us where they are. */
+/* Canned leads — first load, and whenever the Lambda is slow or down. Same
+   strings and same shape the Lambda falls back to: each lead is a LIST of
+   consecutive messages from one person. No place name — these render before the
+   visitor has told us anything. */
 const CANNED = {
-  es:["¿Alguien conoce un dentista por la zona? Me duele una muela.",
-      "Busco dentista para limpieza cerca, ¿alguna recomendación?",
-      "¿Hay algún dentista que atienda hoy o mañana temprano?"],
-  en:["Anyone know a dentist nearby? My tooth hurts.",
-      "Looking for a dentist for a cleaning nearby, any recommendations?",
-      "Is there a dentist available today or early tomorrow?"],
+  es:[["buenas alguien conoce un dentista? se me partio una muela y duele bastante"],
+      ["Hola a todos! 🙏 alguien me recomienda un dentista de confianza? Gracias 😊"],
+      ["buen dia","alguien tiene contacto de un dentista?","es para mi hija, le duele desde ayer"]],
+  en:[["hi does anyone know a dentist? i chipped a molar and it really hurts"],
+      ["Hello everyone! 🙏 can anyone recommend a dentist they trust? Thanks 😊"],
+      ["morning","does anyone have a dentist contact?","its for my daughter, hurting since yesterday"]],
 };
 
 const T = {
@@ -316,28 +322,33 @@ const ctaText = () => (lang==='es'
    The card shows the product: the message at full fidelity, and the one field
    we sell, masked. Nothing on the card apologises for itself — that fact is
    stated once, below the feed, not stamped on every row. */
+const partsOf = l => Array.isArray(l) ? l : [l];   // tolerate the older string shape
+
 function renderLeads(skeleton){
   const t = T[lang], feed = $('feed');
   feed.replaceChildren();
-  for(let i=0; i<3; i++){
-    const b = document.createElement('div'); b.className='bubble';
-    const m = document.createElement('div'); m.className='msg';
+  const n = skeleton ? 3 : leads.length;
+  for(let i=0; i<n; i++){
+    const card = document.createElement('div'); card.className='card';
     if(skeleton){
-      m.replaceChildren(...['','s2','s3'].map(k=>{
+      const p = document.createElement('div'); p.className='part';
+      p.replaceChildren(...['','s2','s3'].map(k=>{
         const s=document.createElement('div'); s.className='skel '+k; return s;}));
+      card.appendChild(p);
     } else {
-      m.textContent = leads[i] || '';       // never innerHTML: LLM + visitor text
-    }
-    b.appendChild(m);
-    if(!skeleton){
+      partsOf(leads[i]).forEach(txt=>{
+        const p = document.createElement('div'); p.className='part';
+        p.textContent = txt;                // never innerHTML: LLM + visitor text
+        card.appendChild(p);
+      });
       const f = document.createElement('div'); f.className='cardfoot';
       const k = document.createElement('span'); k.className='klabel'; k.textContent = t.lphone;
       const v = document.createElement('span'); v.className='held'; v.textContent = PHONE_MASK;
       const lock = document.createElement('span'); lock.className='lock'; lock.textContent = t.locked;
       f.append(k, v, lock);
-      b.appendChild(f);
+      card.appendChild(f);
     }
-    feed.appendChild(b);
+    feed.appendChild(card);
   }
 }
 
