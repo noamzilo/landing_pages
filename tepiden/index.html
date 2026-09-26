@@ -449,8 +449,10 @@ function pinRoll(text){                     // "plomero en Polanco" → "un plom
   stopRoll();
   if(hit) setRoll(hit);
 }
-['focus','pointerdown','keydown'].forEach(e=>
+/* window 'focus' fires on page load / tab switch, so only the input's focus counts */
+['pointerdown','keydown'].forEach(e=>
   addEventListener(e, stopRoll, {once:true, passive:true, capture:true}));
+$('q').addEventListener('focus', stopRoll, {once:true});
 
 /* ═══ wiring ══════════════════════════════════════════════════════════════ */
 $('es').onclick = ()=>{ lang='es'; leads=CANNED.es.slice(); render(); };
