@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>tepiden — Ellos preguntan. Tú respondes.</title>
-<meta name="description" content="Todos los días alguien en tu zona pide tu servicio en un grupo de WhatsApp.">
+<title>tepiden — Te piden. Te avisamos.</title>
+<meta name="description" content="Cada día alguien en tu zona pide tu servicio en un grupo de WhatsApp. Te pasamos su mensaje y su número.">
 <style>
 :root{
   --bg:#f4f5f7; --panel:#fff; --line:#e4e6ea; --ink:#101418; --muted:#6b7480;
@@ -22,15 +22,18 @@ body{margin:0;background:var(--bg);color:var(--ink);
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:600px;margin:0 auto;padding:0 16px 64px}
 header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 8px}
-.logo{font-weight:700;font-size:19px;letter-spacing:-.02em}
-.logo span{color:var(--accent)}
+.logo{font-weight:700;font-size:24px;letter-spacing:-.02em}
+.logo span,.brand span{color:var(--accent)}
 .lang{display:flex;gap:2px;background:var(--bubble);border-radius:999px;padding:3px}
 .lang button{border:0;background:none;color:var(--muted);font:600 12px/1 inherit;
   padding:6px 11px;border-radius:999px;cursor:pointer}
 .lang button[aria-pressed=true]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
 
-h1{font-size:30px;line-height:1.15;letter-spacing:-.025em;margin:26px 0 10px}
-h1 em{font-style:normal;color:var(--accent)}
+h1{font-size:clamp(28px,7.5vw,40px);line-height:1.2;letter-spacing:-.025em;margin:26px 0 12px}
+h1>span{display:block}
+/* the trade slot: every entry is <=20 chars so it fits one line at 360px */
+.roll{position:relative;height:1.2em;overflow:hidden;color:var(--accent)}
+.roll span{position:absolute;left:0;top:0;white-space:nowrap}
 .sub{color:var(--muted);margin:0 0 26px;font-size:16.5px}
 
 /* ---- widget ---- */
@@ -137,7 +140,7 @@ footer b{color:var(--ink);font-weight:600}
   </div>
 </header>
 
-<h1 data-t="h1"></h1>
+<h1><span data-t="h1a"></span><span class="roll" id="roll"></span><span data-t="h1b"></span></h1>
 <p class="sub" data-t="sub"></p>
 
 <div class="widget">
@@ -212,24 +215,32 @@ const PRICE_USD = 5, PRICE_LABEL = "US$ 5";
    claiming a specific national format. */
 const PHONE_MASK = "+•• ••• ••• •••";
 
-/* Rotating placeholders. Self-identification: the visitor waits to see their own
-   trade inside the box that asks for it. Under 5s total, so WCAG 2.2.2 needs no
-   pause control. Never writes .value — that would poison the `searched` data.
-   Cities span LatAm so breadth is visible and most visitors recognise one. */
-const PLACEHOLDERS = {
-  es:["plomero en Polanco","dentista en Chapinero","electricista en Miraflores",
-      "peluquería en Palermo","cerrajero en Laureles","albañil en Ñuñoa",
-      "aire acondicionado en Escazú","veterinaria en Pocitos","pintor en Villa Morra"],
-  en:["plumber in Polanco","dentist in Chapinero","electrician in Miraflores",
-      "hair salon in Palermo","locksmith in Laureles","builder in Ñuñoa",
-      "air conditioning in Escazú","vet in Pocitos","painter in Villa Morra"],
+/* The headline slot: "Te piden [un plomero]". Each entry carries its own article
+   (Spanish gender) and stays <=20 chars. 100 per language, 10 per line. The
+   datalist is the same list minus the article. */
+const ROLL = {
+  es:["un plomero","un electricista","un dentista","una peluquera","un cerrajero","un albañil","un pintor","un carpintero","un mecánico","un jardinero",
+      "una niñera","un veterinario","una mudanza","un fumigador","un vidriero","un herrero","un tapicero","un gasista","un techista","un fotógrafo",
+      "una manicurista","una maquilladora","un barbero","un abogado","un contador","un profe de inglés","un profe particular","una nutricionista","un psicólogo","un fisioterapeuta",
+      "un masajista","un personal trainer","un pediatra","un técnico celular","un técnico de PC","un paseaperros","una cuidadora","una enfermera","un soldador","un DJ",
+      "un catering","una pastelera","un chef a domicilio","un animador infantil","una costurera","un zapatero","un tatuador","un diseñador gráfico","un programador","un traductor",
+      "un arquitecto","un ingeniero","un maestro de obra","un técnico de aire","una grúa","un lavado de autos","un profe de música","una profe de yoga","una profe de baile","un chofer",
+      "un profe de natación","un profe de guitarra","un dermatólogo","un ginecólogo","un oftalmólogo","un ortodoncista","un médico de guardia","una inmobiliaria","un gestor","un podólogo",
+      "una cosmetóloga","una guardería","una florería","una wedding planner","una banda en vivo","un afinador de piano","un marmolero","un decorador","un impermeabilizador","un instalador solar",
+      "un sastre","una lavandería","un paisajista","un mecánico de bicis","un tutor de química","una psicopedagoga","un notario","un cuidador de gatos","un cardiólogo","un tornero",
+      "un chapista","un bartender","un videógrafo","un adiestrador","un profe de francés","una limpieza a fondo","un cocinero","un kinesiólogo","un odontopediatra","un técnico de TV"],
+  en:["a plumber","an electrician","a dentist","a hairdresser","a locksmith","a builder","a painter","a carpenter","a mechanic","a gardener",
+      "a babysitter","a vet","a moving van","an exterminator","a glazier","a metalworker","an upholsterer","a gas fitter","a roofer","a photographer",
+      "a manicurist","a makeup artist","a barber","a lawyer","an accountant","an English tutor","a private tutor","a nutritionist","a psychologist","a physio",
+      "a massage therapist","a personal trainer","a pediatrician","a phone repair shop","a PC technician","a dog walker","a carer","a nurse","a welder","a DJ",
+      "a caterer","a baker","a private chef","a kids' entertainer","a seamstress","a cobbler","a tattoo artist","a graphic designer","a programmer","a translator",
+      "an architect","an engineer","a contractor","an AC technician","a tow truck","a car wash","a music teacher","a yoga teacher","a dance teacher","a driver",
+      "a swim teacher","a guitar teacher","a dermatologist","a gynecologist","an eye doctor","an orthodontist","a home-visit doctor","a real estate agent","an insurance broker","a podiatrist",
+      "a beautician","a daycare","a florist","a wedding planner","a live band","a piano tuner","a stonemason","a decorator","a waterproofer","a solar installer",
+      "a tailor","a laundry","a landscaper","a bike mechanic","a chemistry tutor","a speech therapist","a notary","a cat sitter","a cardiologist","a machinist",
+      "an auto body shop","a bartender","a videographer","a dog trainer","a French tutor","a deep clean","a cook","a chiropractor","a kids' dentist","a TV repairman"],
 };
-const TRADES = {
-  es:["plomero","electricista","dentista","peluquería","cerrajero","albañil","pintor",
-      "carpintero","aire acondicionado","veterinaria","mecánico","jardinero","mudanzas","niñera"],
-  en:["plumber","electrician","dentist","hair salon","locksmith","builder","painter",
-      "carpenter","air conditioning","vet","mechanic","gardener","removals","babysitter"],
-};
+const noun = e => e.slice(e.indexOf(' ')+1);
 
 /* Canned leads — first load, and whenever the Lambda is slow or down. Same
    strings and same shape the Lambda falls back to: each lead is a LIST of
@@ -245,9 +256,10 @@ const CANNED = {
 };
 
 const T = {
-es:{h1:'Ellos preguntan. <em>Tú respondes.</em>',
-    sub:'Todos los días alguien en tu zona pide tu servicio en un grupo de WhatsApp.',
-    qlabel:'¿A qué te dedicas y dónde?', go:'Ver',
+es:{h1a:'Te piden',
+    h1b:'<b class="brand">te<span>piden</span></b> te avisa.',
+    sub:'Cada día alguien en tu zona lo pide en un grupo de WhatsApp. Te pasamos su mensaje y su número.',
+    qlabel:'¿A qué te dedicas y dónde?', go:'Ver', qph:'ej: plomero en Polanco',
     reframe:'Mira qué tipo de pedidos encontramos para tu negocio:',
     lphone:'Teléfono', locked:'incluido al comprar',
     honest:'Muestra generada para tu negocio. Un pedido real llega igual: el mensaje, y el número de quien lo escribió.',
@@ -271,9 +283,10 @@ es:{h1:'Ellos preguntan. <em>Tú respondes.</em>',
     closep:'Escribe a qué te dedicas y dónde. Te mostramos qué se está pidiendo.',
     closeb:'Ver pedidos de mi zona',
     who:'Soy <b>Noam</b>, de Yaksano. Estoy construyendo tepiden para América Latina. Si algo de esto no te cierra, escríbeme y lo hablamos.'},
-en:{h1:'They ask. <em>You answer.</em>',
-    sub:'Every day someone in your neighbourhood asks for your service in a WhatsApp group.',
-    qlabel:'What do you do, and where?', go:'Go',
+en:{h1a:'They are asking for',
+    h1b:'<b class="brand">te<span>piden</span></b> tells you.',
+    sub:'Every day someone near you asks for one in a WhatsApp group. We send you their message and their number.',
+    qlabel:'What do you do, and where?', go:'Go', qph:'e.g. plumber in Polanco',
     reframe:'Here is the kind of request we find for your trade:',
     lphone:'Phone', locked:'included when you buy',
     honest:'Sample generated for your trade. A real request arrives the same way: the message, and the number of whoever wrote it.',
@@ -356,6 +369,7 @@ function renderLeads(skeleton){
 async function fetchLeads(){
   business = $('q').value.trim();
   if(!business) return;
+  pinRoll(business);
   track('searched',{text:business});
   renderLeads(true);
   const t0 = performance.now();
@@ -386,39 +400,62 @@ function render(){
   document.querySelectorAll('[data-t]').forEach(n=>n.innerHTML = t[n.dataset.t]);
   $('pname').placeholder = t.pnameph;
   $('pphone').placeholder = t.pphoneph;
+  $('q').placeholder = t.qph;
   $('price').replaceChildren(document.createTextNode(PRICE_LABEL),
     Object.assign(document.createElement('small'),{textContent:t.pricesub}));
-  $('rubros').replaceChildren(...TRADES[lang].map(v=>
-    Object.assign(document.createElement('option'),{value:v})));
+  $('rubros').replaceChildren(...ROLL[lang].map(e=>
+    Object.assign(document.createElement('option'),{value:noun(e)})));
+  stopRoll(); setRoll(pick(ROLL[lang]));
   $('es').setAttribute('aria-pressed', lang==='es');
   $('en').setAttribute('aria-pressed', lang==='en');
   renderLeads(false);
 }
 
-/* ═══ placeholder rotation ════════════════════════════════════════════════ */
-let rotTimer = null, rotStopped = false;
-function stopRotation(){ rotStopped = true; clearTimeout(rotTimer); }
-function startRotation(){
-  const box = $('q');
-  const pool = PLACEHOLDERS[lang].slice().sort(()=>Math.random()-0.5).slice(0,3);
-  box.placeholder = pool[0];
-  const reduce = window.matchMedia
-    && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce) return;                        // first string only, no motion
-  const step = i => () => {
-    if(rotStopped) return;
-    box.placeholder = pool[i];
-    if(i < pool.length-1) rotTimer = setTimeout(step(i+1), 1700);
+/* ═══ headline trade slot ═════════════════════════════════════════════════
+   Slot-machine spin: fast, decelerating, lands on one trade. Total ~4.2s, so
+   WCAG 2.2.2 needs no pause control — keep the sum of SPIN under 5000. Stops on
+   first interaction; pins to the visitor's own trade once they search. */
+const SPIN = [400,180,180,200,220,250,290,340,400,480,580,700];
+const pick = a => a[Math.floor(Math.random()*a.length)];
+let rollTimer = null;
+function stopRoll(){ clearTimeout(rollTimer); rollTimer = null; }
+function setRoll(text){                     // no motion
+  const s = document.createElement('span'); s.textContent = text;
+  $('roll').replaceChildren(s);
+}
+function rollTo(text, ms){
+  const box = $('roll'), old = box.lastElementChild;
+  const s = document.createElement('span'); s.textContent = text;
+  box.append(s);
+  const d = Math.min(300, ms*.8), o = {duration:d, easing:'ease-out'};
+  s.animate([{transform:'translateY(100%)'},{transform:'translateY(0)'}], o);
+  if(old) old.animate([{transform:'translateY(0)'},{transform:'translateY(-100%)'}], o)
+    .onfinish = () => old.remove();
+}
+function startRoll(){
+  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const pool = ROLL[lang].slice().sort(()=>Math.random()-0.5);
+  let i = 0;
+  const step = () => {
+    if(i >= SPIN.length){ rollTimer = null; return; }
+    const ms = SPIN[i]; rollTimer = setTimeout(()=>{ rollTo(pool[i++], SPIN[i] || 300); step(); }, ms);
   };
-  rotTimer = setTimeout(step(1), 1700);     // 0s / 1.7s / 3.4s, done well under 5s
+  step();
+}
+function pinRoll(text){                     // "plomero en Polanco" → "un plomero"
+  const q = text.toLowerCase();
+  const hit = ROLL[lang].filter(e=>q.includes(noun(e).toLowerCase()))
+    .sort((a,b)=>b.length-a.length)[0];
+  stopRoll();
+  if(hit) setRoll(hit);
 }
 ['focus','pointerdown','keydown'].forEach(e=>
-  addEventListener(e, stopRotation, {once:true, passive:true, capture:true}));
+  addEventListener(e, stopRoll, {once:true, passive:true, capture:true}));
 
 /* ═══ wiring ══════════════════════════════════════════════════════════════ */
 $('es').onclick = ()=>{ lang='es'; leads=CANNED.es.slice(); render(); };
 $('en').onclick = ()=>{ lang='en'; leads=CANNED.en.slice(); render(); };
-$('go').onclick = ()=>{ stopRotation(); fetchLeads(); };
+$('go').onclick = fetchLeads;
 $('q').addEventListener('keydown', e=>{ if(e.key==='Enter') fetchLeads(); });
 $('closecta').onclick = ()=>{
   track('close_cta_click',{variant});
@@ -446,7 +483,7 @@ $('psend').onclick = ()=>{
   const forced = p.get('variant');
   variant = (forced==='whatsapp'||forced==='pay') ? forced : 'pay';
   render();
-  startRotation();
+  startRoll();
 
   const land = {variant, vid};
   ['utm_source','utm_medium','utm_campaign','utm_content'].forEach(k=>{
