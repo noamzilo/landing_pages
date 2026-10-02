@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>tepiden — Te piden. Te avisamos.</title>
-<meta name="description" content="Cada día alguien en tu zona pide tu servicio en un grupo de WhatsApp. Te pasamos su mensaje y su número.">
+<title>tepiden — Te traemos el cliente</title>
+<meta name="description" content="Cada día alguien en tu zona necesita tu servicio y lo pide en un grupo de WhatsApp. Te traemos el cliente; tú eliges a quién escribirle.">
 <style>
 :root{
   --bg:#f4f5f7; --panel:#fff; --line:#e4e6ea; --ink:#101418; --muted:#6b7480;
@@ -21,9 +21,14 @@ body{margin:0;background:var(--bg);color:var(--ink);
   font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-font-smoothing:antialiased}
 .wrap{max-width:600px;margin:0 auto;padding:0 16px 64px}
-header{display:flex;align-items:center;justify-content:space-between;padding:22px 0 8px}
-.logo{font-weight:700;font-size:24px;letter-spacing:-.02em}
-.logo span,.brand span{color:var(--accent)}
+/* top menu: full-width bar so the logo reads as chrome, not as page copy */
+.topbar{position:sticky;top:0;z-index:10;background:var(--panel);border-bottom:1px solid var(--line)}
+.topin{max-width:600px;margin:0 auto;padding:10px 16px;display:flex;align-items:center;gap:16px}
+.logo{font-weight:700;font-size:22px;letter-spacing:-.02em;color:var(--ink);text-decoration:none}
+.logo span{color:var(--accent)}
+.navlink{margin-left:auto;color:var(--muted);font-size:14px;font-weight:600;text-decoration:none}
+.navlink:hover{color:var(--ink)}
+#como{scroll-margin-top:70px}
 .lang{display:flex;gap:2px;background:var(--bubble);border-radius:999px;padding:3px}
 .lang button{border:0;background:none;color:var(--muted);font:600 12px/1 inherit;
   padding:6px 11px;border-radius:999px;cursor:pointer}
@@ -134,15 +139,18 @@ footer b{color:var(--ink);font-weight:600}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-<header>
-  <div class="logo">te<span>piden</span></div>
-  <div class="lang">
-    <button id="es" aria-pressed="true">ES</button>
-    <button id="en" aria-pressed="false">EN</button>
-  </div>
+<header class="topbar">
+  <nav class="topin">
+    <a class="logo" href="#">te<span>piden</span></a>
+    <a class="navlink" href="#como" data-t="nav"></a>
+    <div class="lang">
+      <button id="es" aria-pressed="true">ES</button>
+      <button id="en" aria-pressed="false">EN</button>
+    </div>
+  </nav>
 </header>
+
+<div class="wrap">
 
 <h1><span data-t="h1a"></span><span class="rollrow"><span class="roll" id="roll"></span><button class="rollpause" id="rollpause" hidden></button></span><span data-t="h1b"></span></h1>
 <p class="sub" data-t="sub"></p>
@@ -171,7 +179,7 @@ footer b{color:var(--ink);font-weight:600}
   <div class="done" id="done"><b data-t="doneh"></b><span data-t="donep"></span></div>
 </div>
 
-<section>
+<section id="como">
   <h2 data-t="mech"></h2>
   <ol class="steps">
     <li data-t="m1"></li>
@@ -261,8 +269,8 @@ const CANNED = {
 
 const T = {
 es:{h1a:'Te piden',
-    h1b:'<b class="brand">te<span>piden</span></b> te avisa.',
-    sub:'Cada día alguien en tu zona lo pide en un grupo de WhatsApp. Te pasamos su mensaje y su número.',
+    h1b:'Te traemos el cliente.', nav:'Cómo funciona',
+    sub:'Cada día alguien en tu zona necesita tu servicio y lo pide en un grupo de WhatsApp. Te pasamos su mensaje y su número. Tú eliges a quién escribirle.',
     qlabel:'¿A qué te dedicas y dónde?', go:'Ver', qph:'ej: plomero en Polanco',
     pause:'Pausar', play:'Reanudar',
     reframe:'Mira qué tipo de pedidos encontramos para tu negocio:',
@@ -289,8 +297,8 @@ es:{h1a:'Te piden',
     closeb:'Ver pedidos de mi zona',
     who:'Soy <b>Noam</b>, de Yaksano. Estoy construyendo tepiden para América Latina. Si algo de esto no te cierra, escríbeme y lo hablamos.'},
 en:{h1a:'They are asking for',
-    h1b:'<b class="brand">te<span>piden</span></b> tells you.',
-    sub:'Every day someone near you asks for one in a WhatsApp group. We send you their message and their number.',
+    h1b:'We bring you the customer.', nav:'How it works',
+    sub:'Every day someone near you needs your service and asks for it in a WhatsApp group. We send you their message and their number. You choose who to message.',
     qlabel:'What do you do, and where?', go:'Go', qph:'e.g. plumber in Polanco',
     pause:'Pause', play:'Play',
     reframe:'Here is the kind of request we find for your trade:',
