@@ -32,7 +32,11 @@ header{display:flex;align-items:center;justify-content:space-between;padding:22p
 h1{font-size:clamp(28px,7.5vw,40px);line-height:1.2;letter-spacing:-.025em;margin:26px 0 12px}
 h1>span{display:block}
 /* the trade slot: every entry is <=20 chars so it fits one line at 360px */
-.roll{position:relative;height:1.2em;overflow:hidden;color:var(--accent)}
+.rollrow{display:flex!important;align-items:center;gap:8px}
+.roll{position:relative;flex:1;height:1.2em;overflow:hidden;color:var(--accent)}
+.rollpause{flex:none;border:0;background:none;color:var(--muted);opacity:.5;cursor:pointer;
+  font-size:14px;line-height:1;padding:6px}
+.rollpause:hover,.rollpause:focus-visible{opacity:1}
 .roll span{position:absolute;left:0;top:0;white-space:nowrap}
 .sub{color:var(--muted);margin:0 0 26px;font-size:16.5px}
 
@@ -140,7 +144,7 @@ footer b{color:var(--ink);font-weight:600}
   </div>
 </header>
 
-<h1><span data-t="h1a"></span><span class="roll" id="roll"></span><span data-t="h1b"></span></h1>
+<h1><span data-t="h1a"></span><span class="rollrow"><span class="roll" id="roll"></span><button class="rollpause" id="rollpause" hidden></button></span><span data-t="h1b"></span></h1>
 <p class="sub" data-t="sub"></p>
 
 <div class="widget">
@@ -260,6 +264,7 @@ es:{h1a:'Te piden',
     h1b:'<b class="brand">te<span>piden</span></b> te avisa.',
     sub:'Cada día alguien en tu zona lo pide en un grupo de WhatsApp. Te pasamos su mensaje y su número.',
     qlabel:'¿A qué te dedicas y dónde?', go:'Ver', qph:'ej: plomero en Polanco',
+    pause:'Pausar', play:'Reanudar',
     reframe:'Mira qué tipo de pedidos encontramos para tu negocio:',
     lphone:'Teléfono', locked:'incluido al comprar',
     honest:'Muestra generada para tu negocio. Un pedido real llega igual: el mensaje, y el número de quien lo escribió.',
@@ -287,6 +292,7 @@ en:{h1a:'They are asking for',
     h1b:'<b class="brand">te<span>piden</span></b> tells you.',
     sub:'Every day someone near you asks for one in a WhatsApp group. We send you their message and their number.',
     qlabel:'What do you do, and where?', go:'Go', qph:'e.g. plumber in Polanco',
+    pause:'Pause', play:'Play',
     reframe:'Here is the kind of request we find for your trade:',
     lphone:'Phone', locked:'included when you buy',
     honest:'Sample generated for your trade. A real request arrives the same way: the message, and the number of whoever wrote it.',
@@ -405,54 +411,58 @@ function render(){
     Object.assign(document.createElement('small'),{textContent:t.pricesub}));
   $('rubros').replaceChildren(...ROLL[lang].map(e=>
     Object.assign(document.createElement('option'),{value:noun(e)})));
-  stopRoll(); setRoll(pick(ROLL[lang]));
+  setRoll(pick(ROLL[lang])); startRoll();
   $('es').setAttribute('aria-pressed', lang==='es');
   $('en').setAttribute('aria-pressed', lang==='en');
   renderLeads(false);
 }
 
 /* ═══ headline trade slot ═════════════════════════════════════════════════
-   Slot-machine spin: fast, decelerating, lands on one trade. Total ~4.2s, so
-   WCAG 2.2.2 needs no pause control — keep the sum of SPIN under 5000. Stops on
-   first interaction; pins to the visitor's own trade once they search. */
-const SPIN = [400,180,180,200,220,250,290,340,400,480,580,700];
+   A new trade every 2s, forever, in shuffled order. Motion past 5s needs a pause
+   control (WCAG 2.2.2) — that is the small button beside the slot. Stops for
+   good once the visitor searches: the slot then shows their own trade. */
+const ROLL_MS = 2000;
 const pick = a => a[Math.floor(Math.random()*a.length)];
 let rollTimer = null;
-function stopRoll(){ clearTimeout(rollTimer); rollTimer = null; }
+function stopRoll(){ clearInterval(rollTimer); rollTimer = null; }
 function setRoll(text){                     // no motion
   const s = document.createElement('span'); s.textContent = text;
   $('roll').replaceChildren(s);
 }
-function rollTo(text, ms){
-  const box = $('roll'), old = box.lastElementChild;
+function rollTo(text){
+  const box = $('roll');
+  while(box.children.length > 1) box.firstElementChild.remove();  // hidden tab backlog
+  const old = box.lastElementChild;
   const s = document.createElement('span'); s.textContent = text;
   box.append(s);
-  const d = Math.min(300, ms*.8), o = {duration:d, easing:'ease-out'};
+  const o = {duration:450, easing:'cubic-bezier(.2,.8,.2,1)'};
   s.animate([{transform:'translateY(100%)'},{transform:'translateY(0)'}], o);
   if(old) old.animate([{transform:'translateY(0)'},{transform:'translateY(-100%)'}], o)
     .onfinish = () => old.remove();
 }
 function startRoll(){
-  if(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  stopRoll();
+  const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  $('rollpause').hidden = reduce;
+  if(reduce) return;
+  $('rollpause').textContent = '⏸';
+  $('rollpause').setAttribute('aria-label', T[lang].pause);
   const pool = ROLL[lang].slice().sort(()=>Math.random()-0.5);
   let i = 0;
-  const step = () => {
-    if(i >= SPIN.length){ rollTimer = null; return; }
-    const ms = SPIN[i]; rollTimer = setTimeout(()=>{ rollTo(pool[i++], SPIN[i] || 300); step(); }, ms);
-  };
-  step();
+  rollTimer = setInterval(()=>rollTo(pool[i++ % pool.length]), ROLL_MS);
 }
 function pinRoll(text){                     // "plomero en Polanco" → "un plomero"
   const q = text.toLowerCase();
   const hit = ROLL[lang].filter(e=>q.includes(noun(e).toLowerCase()))
     .sort((a,b)=>b.length-a.length)[0];
-  stopRoll();
+  stopRoll(); $('rollpause').hidden = true;
   if(hit) setRoll(hit);
 }
-/* window 'focus' fires on page load / tab switch, so only the input's focus counts */
-['pointerdown','keydown'].forEach(e=>
-  addEventListener(e, stopRoll, {once:true, passive:true, capture:true}));
-$('q').addEventListener('focus', stopRoll, {once:true});
+$('rollpause').onclick = ()=>{
+  const b = $('rollpause');
+  if(rollTimer){ stopRoll(); b.textContent='▶'; b.setAttribute('aria-label', T[lang].play); }
+  else startRoll();
+};
 
 /* ═══ wiring ══════════════════════════════════════════════════════════════ */
 $('es').onclick = ()=>{ lang='es'; leads=CANNED.es.slice(); render(); };
@@ -485,7 +495,6 @@ $('psend').onclick = ()=>{
   const forced = p.get('variant');
   variant = (forced==='whatsapp'||forced==='pay') ? forced : 'pay';
   render();
-  startRoll();
 
   const land = {variant, vid};
   ['utm_source','utm_medium','utm_campaign','utm_content'].forEach(k=>{
